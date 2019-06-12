@@ -13,14 +13,14 @@ namespace QueueingSystem
     public partial class Form1 : Form
     {
         int NumberOfOperators;
+        Logger Logger;
         Double ArrivalLambda, ServiceLambda;
-        int PersonInQueue;
-        DateTime WhenArriveNext;
-        List<Operator> Operators = new List<Operator>();
-        Random rnd = new Random(Guid.NewGuid().GetHashCode());
+        Queue Queue;
+        List<IAgent> Agents= new List<IAgent>();
         public Form1()
         {
             InitializeComponent();
+            Logger = new Logger { log = listBox1 };
         }
         private void StartButton_Click(object sender, EventArgs e)
         {
@@ -28,35 +28,24 @@ namespace QueueingSystem
             ArrivalLambda = Convert.ToDouble(arrivalTextBox.Text);
             ServiceLambda = Convert.ToDouble(serviceTextBox.Text);
 
-            Operators.Clear();
+            Agents.Clear();
+            Queue = new Queue(ArrivalLambda, Logger);
+            Agents.Add(Queue);
             for (int i = 0; i < NumberOfOperators; i++)
             {
-                Operators.Add(new Operator { State = State.Free, WorkCoefficient = ServiceLambda });
+               Agents.Add(new Operator { State = State.Free, WorkCoefficient = ServiceLambda, Logger = Logger, Queue = Queue });
             }
 
-            PersonInQueue = 0;
-            WhenArriveNext = DateTime.Now + new TimeSpan(0, 0, (int)Math.Ceiling(-Math.Log(rnd.NextDouble()) / ArrivalLambda));
+
             if (!timer1.Enabled)
                 timer1.Start();
         }
         private void Timer1_Tick(object sender, EventArgs e)
         {
-            if (DateTime.Now >= WhenArriveNext)
-            {
-                PersonInQueue++;
-                WhenArriveNext += new TimeSpan(0, 0, (int)Math.Ceiling(-Math.Log(rnd.NextDouble()) / ArrivalLambda));
-            }
+            Agents.ForEach(x => x.Tick());
 
-            Operators.ForEach(x => x.CheckIfIsFree());
-
-            if (PersonInQueue > 0 && Operators.Any(x => x.State == State.Free))
-            {
-                Operators.First(x => x.State == State.Free).AddClient();
-                PersonInQueue--;
-            }
-
-            label4.Text = $"Person in queue {PersonInQueue}";
-            label5.Text = $"Free operators {Operators.Sum(x => (x.State == State.Free ? 1 : 0))}";
+            label4.Text = $"Person in queue {Queue.size}";
+            label5.Text = $"Free operators {Agents.Sum(x => (x is Operator &&  (x as Operator).State == State.Free ? 1 : 0))}";
         }
     }
 }
