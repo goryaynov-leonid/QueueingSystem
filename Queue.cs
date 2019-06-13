@@ -39,7 +39,7 @@ namespace QueueingSystem
 
         private void UpdArrive()
         {
-            Arrive = DateTime.Now + new TimeSpan(0, 0, (int)Math.Round(Random.NextDouble() * (max - min)));
+            Arrive = DateTime.Now + new TimeSpan(0, 0, (int)Math.Round(Random.NextDouble() * (max - min) + min));
         }
 
         public void GetCustomer()

@@ -28,7 +28,7 @@ namespace QueueingSystem
             switch (State)
             {
                 case State.Free:
-                    if (Queue.size > 0 && State == State.Free)
+                    if (Queue.size > 0)
                     {
                         AddClient();
                     }
